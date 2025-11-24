@@ -1,27 +1,22 @@
 {
-	"compilerOptions": {
-		"baseUrl": ".",
-		"jsx": "react-jsx",
-		"lib": ["DOM", "DOM.Iterable", "ES2022"],
-		"module": "ES2022",
-		"moduleResolution": "bundler",
-		"paths": {
-			"~/*": ["./app/*"]
-		},
-		"esModuleInterop": true,
-		"noEmit": true,
-		"resolveJsonModule": true,
-		"rootDirs": [".", "./.react-router/types"],
-		"skipLibCheck": true,
-		"strict": true,
-		"target": "ES2022",
-		"types": ["node", "vite/client"],
-		"verbatimModuleSyntax": true
-	},
-	"include": [
-		".react-router/types/**/*",
-		"**/.client/**/*",
-		"**/.server/**/*",
-		"**/*"
-	]
+    "compilerOptions": {
+        "baseUrl": ".",
+        "jsx": "react-jsx",
+        "lib": ["DOM", "DOM.Iterable", "ES2022"],
+        "module": "ES2022",
+        "moduleResolution": "bundler",
+        "paths": {
+            "~/*": ["./app/*"]
+        },
+        "esModuleInterop": true,
+        "noEmit": true,
+        "resolveJsonModule": true,
+        "rootDirs": [".", "./.react-router/types"],
+        "skipLibCheck": true,
+        "strict": true,
+        "target": "ES2022",
+        "types": ["node", "vite/client"],
+        "verbatimModuleSyntax": true
+    },
+    "include": [".react-router/types/**/*", "**/.client/**/*", "**/.server/**/*", "**/*"]
 }

@@ -7,12 +7,12 @@ This guide will help you set up and run the real-time chat project with React.js
 Before you begin, make sure you have installed:
 
 - **Node.js** (version 18 or higher)
-  - Check your version: `node --version`
-  - Download from: [nodejs.org](https://nodejs.org/)
+    - Check your version: `node --version`
+    - Download from: [nodejs.org](https://nodejs.org/)
 - **npm** (version 9 or higher, included with Node.js)
-  - Check your version: `npm --version`
+    - Check your version: `npm --version`
 - **Git** (optional, for cloning the repository)
-  - Check your version: `git --version`
+    - Check your version: `git --version`
 
 ## Installation
 

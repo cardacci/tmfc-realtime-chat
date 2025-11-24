@@ -7,18 +7,22 @@ Welcome to the complete documentation for the **The Mobile-First Company AI Chat
 ### Getting Started
 
 1. **[SETUP.md](./SETUP.md)** - Installation and Execution Guide
-   - Prerequisites (Node.js, npm)
-   - Dependency installation
-   - Commands to run the project
-   - Docker execution (optional)
+    - Prerequisites (Node.js, npm)
+    - Dependency installation
+    - Commands to run the project
+    - Docker execution (optional)
 
 2. **[PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md)** - Project Architecture
-   - Complete directory structure
-   - Detailed description of key files
+    - Complete directory structure
+    - Detailed description of key files
+
+3. **[DEVELOPMENT_LOG.md](./DEVELOPMENT_LOG.md)** - Development Progress
+    - Changes and updates log
+    - Implementation notes
 
 ### Test Documentation
 
-3. **[README.md](../README.md)** - Technical Test Description
+4. **[README.md](../README.md)** - Technical Test Description
 
 ## Quick Start
 
