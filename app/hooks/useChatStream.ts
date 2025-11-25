@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { SSEEventType } from '../types/chat';
+import { SSEEventType, WindowEventType } from '../types/chat';
 import type { ComponentType, Conversation, Message } from '../types/chat';
 
 /* ===== Constants & Enums ===== */
@@ -109,6 +109,34 @@ export function useChatStream() {
 	};
 
 	/* ===== Effects ===== */
+	// Mount - Online/Offline detection.
+	useEffect(() => {
+		const handleOffline = () => {
+			setIsConnected(false);
+			setError('No internet connection. Reconnecting...');
+		};
+
+		const handleOnline = () => {
+			setIsConnected(true);
+			setError(null);
+		};
+
+		window.addEventListener(WindowEventType.ONLINE, handleOnline);
+		window.addEventListener(WindowEventType.OFFLINE, handleOffline);
+
+		// Initial check
+		if (!window.navigator.onLine) {
+			handleOffline();
+		}
+
+		return () => {
+			// Unmount - Remove event listeners.
+			window.removeEventListener(WindowEventType.ONLINE, handleOnline);
+			window.removeEventListener(WindowEventType.OFFLINE, handleOffline);
+		};
+	}, []);
+
+	// Mount - SSE Connection.
 	useEffect(() => {
 		const eventSource = new EventSource(STREAM_URL);
 
@@ -126,8 +154,11 @@ export function useChatStream() {
 				return;
 			}
 
-			setIsConnected(false);
-			setError('Connection lost. Reconnecting...');
+			// Only set error if we are online (otherwise offline handler takes care of it)
+			if (window.navigator.onLine) {
+				setIsConnected(false);
+				setError('Connection lost. Reconnecting...');
+			}
 			// EventSource automatically attempts to reconnect.
 		};
 

@@ -79,7 +79,7 @@ export function Chat() {
 				))}
 			</div>
 
-			<MessageInput />
+			<MessageInput disabled={!isConnected} />
 		</div>
 	);
 }
