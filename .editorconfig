@@ -5,20 +5,13 @@ root = true
 
 # Unix-style newlines with a newline ending every file
 [*]
-charset = utf-8
-end_of_line = crlf
+end_of_line = lf
 insert_final_newline = true
-
-# Matches multiple files with brace expansion notation
-[*.{js,jsx,ts,tsx,json,css,scss,md}]
+charset = utf-8
+indent_style = tab
 indent_size = 4
-indent_style = space
+tab_width = 4
 trim_trailing_whitespace = true
-
-# YAML files
-[*.{yml,yaml}]
-indent_size = 2
-indent_style = space
 
 # Markdown files
 [*.md]

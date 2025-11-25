@@ -83,10 +83,10 @@ Defines project dependencies and execution scripts.
 
 ```json
 {
-    "build": "react-router build", // Production build
-    "dev": "react-router dev", // Development server
-    "start": "react-router-serve ...", // Production server
-    "typecheck": "react-router typegen && tsc" // Type checking
+	"build": "react-router build", // Production build
+	"dev": "react-router dev", // Development server
+	"start": "react-router-serve ...", // Production server
+	"typecheck": "react-router typegen && tsc" // Type checking
 }
 ```
 
@@ -96,11 +96,11 @@ Vite configuration with plugins:
 
 ```typescript
 export default defineConfig({
-    plugins: [
-        tailwindcss(), // Tailwind CSS processing
-        reactRouter(), // React Router integration
-        tsconfigPaths(), // TS path aliases support
-    ],
+	plugins: [
+		tailwindcss(), // Tailwind CSS processing
+		reactRouter(), // React Router integration
+		tsconfigPaths(), // TS path aliases support
+	],
 });
 ```
 
@@ -110,7 +110,7 @@ React Router configuration:
 
 ```typescript
 export default {
-    ssr: true, // Server-Side Rendering enabled
+	ssr: true, // Server-Side Rendering enabled
 } satisfies Config;
 ```
 
