@@ -40,4 +40,5 @@ export interface Message {
 	id: string;
 	isComplete: boolean;
 	role: Role;
+	timestamp: Date;
 }

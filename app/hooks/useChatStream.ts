@@ -217,6 +217,7 @@ export function useChatStream() {
 					id: messageId,
 					isComplete: false,
 					role,
+					timestamp: new Date(),
 				});
 
 				return;
@@ -231,6 +232,7 @@ export function useChatStream() {
 				id: messageId,
 				isComplete: false,
 				role,
+				timestamp: new Date(),
 			});
 		});
 

@@ -1,5 +1,6 @@
 import { useChatStream } from '../../hooks/useChatStream';
 import ConversationView from './child-components/ConversationView';
+import MessageInput from './child-components/MessageInput';
 import type { Conversation } from '../../types/chat';
 
 /** Renders a chat error message. */
@@ -51,7 +52,7 @@ export function Chat() {
 						The Mobile-First Company AI Chat
 					</h1>
 
-					<span className='text-xs text-gray-400'>v0.0.2</span>
+					<span className='text-xs text-gray-400'>v0.0.3</span>
 				</div>
 
 				<ConnectionStatus isConnected={isConnected} />
@@ -65,12 +66,13 @@ export function Chat() {
 				{conversations.map((c, index) => (
 					<ConversationView
 						conversation={c}
-						index={index}
 						key={c.id}
 						showTypingIndicator={index === conversations.length - 1}
 					/>
 				))}
 			</div>
+
+			<MessageInput />
 		</div>
 	);
 }

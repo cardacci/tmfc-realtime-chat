@@ -83,30 +83,24 @@ function TypingIndicator({ message }: { message: Message | undefined }) {
 	);
 }
 
-/** Renders a conversation header with timestamp */
-function ConversationHeader({
-	conversation,
-	index,
-}: {
-	conversation: Conversation;
-	index: number;
-}) {
-	const formatTime = (date: Date) => {
+/** Renders a conversation header with date */
+function ConversationHeader({ conversation }: { conversation: Conversation }) {
+	/* ===== Functions ===== */
+	const formatDate = (date: Date) => {
 		return new Intl.DateTimeFormat('en-US', {
-			hour: '2-digit',
-			minute: '2-digit',
-			second: '2-digit',
+			day: 'numeric',
+			month: 'long',
+			weekday: 'long',
+			year: 'numeric',
 		}).format(date);
 	};
 
 	return (
-		<div className='flex items-center gap-3 mb-4 pb-2 border-b border-gray-300'>
-			<div className='flex items-center gap-2'>
-				<span className='text-sm font-semibold text-gray-700'>
-					Conversation #{index + 1}
+		<div className='flex items-center justify-center mb-4 pb-2'>
+			<div className='bg-white px-4 py-1 rounded-full shadow-sm border border-gray-200'>
+				<span className='text-xs font-medium text-gray-600 uppercase'>
+					{formatDate(conversation.timestamp)}
 				</span>
-
-				<span className='text-xs text-gray-500'>{formatTime(conversation.timestamp)}</span>
 			</div>
 		</div>
 	);
@@ -115,25 +109,32 @@ function ConversationHeader({
 /** Renders a single conversation */
 export default function ConversationView({
 	conversation,
-	index,
 	showTypingIndicator,
 }: {
 	conversation: Conversation;
-	index: number;
 	showTypingIndicator: boolean;
 }) {
+	/* ===== Constants & Variables ===== */
 	const completeMessages = conversation.messages.filter(msg => msg.isComplete);
 	const incompleteMessage = showTypingIndicator
 		? conversation.messages.find(msg => !msg.isComplete)
 		: undefined;
 
+	/* ===== Functions ===== */
+	const formatMessageTime = (date: Date) => {
+		return new Intl.DateTimeFormat('es-ES', {
+			hour: '2-digit',
+			minute: '2-digit',
+		}).format(date);
+	};
+
 	return (
 		<div className='mb-6 last:mb-0'>
-			<ConversationHeader conversation={conversation} index={index} />
+			<ConversationHeader conversation={conversation} />
 
 			<div className='space-y-4'>
 				{completeMessages.map(msg => {
-					const { content, component, id, role } = msg;
+					const { content, component, id, role, timestamp } = msg;
 					const isUser = isUserRole(role);
 
 					return (
@@ -145,6 +146,14 @@ export default function ConversationView({
 								<p className='whitespace-pre-wrap'>{content}</p>
 
 								<ComponentMessage component={component} />
+
+								<div
+									className={`text-[10px] text-gray-400 mt-1 ${
+										isUser ? 'text-right' : 'text-left'
+									}`}
+								>
+									{formatMessageTime(timestamp)}
+								</div>
 							</div>
 						</div>
 					);
