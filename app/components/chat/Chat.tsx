@@ -1,3 +1,4 @@
+import logo from '../../assets/images/logo.avif';
 import { useChatStream } from '../../hooks/useChatStream';
 import ConversationView from './child-components/ConversationView';
 import MessageInput from './child-components/MessageInput';
@@ -46,16 +47,22 @@ export function Chat() {
 
 	return (
 		<div className='flex flex-col h-screen max-w-2xl mx-auto p-4'>
-			<header className='mb-4 flex justify-between items-center'>
-				<div className='flex items-baseline gap-2'>
-					<h1 className='text-2xl font-bold text-black'>
-						The Mobile-First Company AI Chat
-					</h1>
+			<header className='chat-header mb-4 flex justify-between items-center p-4 rounded-lg shadow-sm'>
+				<div className='flex items-center gap-4'>
+					<img
+						alt='The Mobile-First Company'
+						className='h-12 w-auto object-contain mix-blend-multiply'
+						src={logo}
+					/>
 
-					<span className='text-xs text-gray-400'>v0.0.3</span>
+					<h1 className='text-3xl text-slate-800 tracking-tight'>AI Chat</h1>
 				</div>
 
-				<ConnectionStatus isConnected={isConnected} />
+				<div className='flex flex-col items-end gap-1'>
+					<ConnectionStatus isConnected={isConnected} />
+
+					<span className='text-xs text-gray-600 font-medium'>v0.0.3</span>
+				</div>
 			</header>
 
 			<ChatError error={error} />

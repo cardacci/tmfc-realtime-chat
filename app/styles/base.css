@@ -6,9 +6,13 @@
 
 /* ==== Brand palette ==== */
 :root {
-	--brand-primary-dark: #c5a030; /* darker shade for contrast */
-	--brand-primary-light: #ffe58a; /* lighter tint */
-	--brand-primary: #fdd150; /* company main color */
+	--brand-primary-dark: #c4b720; /* darker shade for contrast */
+	--brand-primary-light: #fffbb0; /* lighter tint */
+	--brand-primary: #fdf151; /* company main color */
+}
+
+.chat-header {
+	background-color: var(--brand-primary);
 }
 
 /* Message bubbles */
@@ -30,4 +34,3 @@
 	max-width: 80%;
 	padding: 0.75rem;
 }
-

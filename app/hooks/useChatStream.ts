@@ -40,11 +40,18 @@ export function useChatStream() {
 		};
 
 		setConversations(prev => {
-			const newIndex = prev.length;
+			let updatedConversations = [...prev, newConversation];
+
+			// Keep only the last 5 conversations (performance).
+			if (updatedConversations.length > 5) {
+				updatedConversations = updatedConversations.slice(1);
+			}
+
+			const newIndex = updatedConversations.length - 1;
 
 			currentConversationIndexRef.current = newIndex;
 
-			return [...prev, newConversation];
+			return updatedConversations;
 		});
 	};
 

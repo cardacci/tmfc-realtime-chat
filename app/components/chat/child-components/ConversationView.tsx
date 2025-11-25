@@ -96,7 +96,7 @@ function ConversationHeader({ conversation }: { conversation: Conversation }) {
 	};
 
 	return (
-		<div className='flex items-center justify-center mb-4 pb-2'>
+		<div className='sticky top-0 z-10 flex items-center justify-center mb-4 pb-2 pt-2'>
 			<div className='bg-white px-4 py-1 rounded-full shadow-sm border border-gray-200'>
 				<span className='text-xs font-medium text-gray-600 uppercase'>
 					{formatDate(conversation.timestamp)}
