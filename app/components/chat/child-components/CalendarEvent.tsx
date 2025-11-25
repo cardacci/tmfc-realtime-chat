@@ -1,4 +1,4 @@
-import { KEYS } from '../constants/keys';
+import { KEYS } from '../../../constants/keys';
 
 interface CalendarEventProps {
 	date: string; // e.g., '2025-12-01'
@@ -7,9 +7,8 @@ interface CalendarEventProps {
 	title: string;
 }
 
-export function CalendarEvent({ title, date, time, status }: CalendarEventProps) {
+export default function CalendarEvent({ title, date, time, status }: CalendarEventProps) {
 	/* ===== Functions ===== */
-
 	/** Format dates for Google Calendar (YYYYMMDDTHHMMSS) */
 	const formatDateTime = (dateStr: string, timeStr: string) => {
 		const [hours, minutes] = timeStr.split(':');
@@ -40,14 +39,14 @@ export function CalendarEvent({ title, date, time, status }: CalendarEventProps)
 		const endDateTime = formatDateTime(date, endTime);
 		const startDateTime = formatDateTime(date, startTime);
 
-		// Build Google Calendar URL
-		const params = new URLSearchParams({
-			action: 'TEMPLATE',
-			dates: `${startDateTime}/${endDateTime}`,
-			text: title,
-		});
+		// Build Google Calendar URL.
+		const params = [
+			'action=TEMPLATE',
+			`dates=${encodeURIComponent(`${startDateTime}/${endDateTime}`)}`,
+			`text=${encodeURIComponent(title)}`,
+		].join('&');
 
-		return `https://calendar.google.com/calendar/render?${params.toString()}`;
+		return `https://calendar.google.com/calendar/render?${params}`;
 	};
 
 	/** Handle click event to open Google Calendar. */
@@ -59,14 +58,14 @@ export function CalendarEvent({ title, date, time, status }: CalendarEventProps)
 		<div
 			className='mt-3 p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200 max-w-sm cursor-pointer'
 			onClick={handleClick}
-			role='button'
-			tabIndex={0}
 			onKeyDown={e => {
 				if (e.key === KEYS.ENTER || e.key === KEYS.SPACE) {
 					e.preventDefault();
 					handleClick();
 				}
 			}}
+			role='button'
+			tabIndex={0}
 		>
 			<div className='flex items-center gap-2 mb-2'>
 				<svg

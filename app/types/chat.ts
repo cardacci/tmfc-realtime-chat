@@ -28,6 +28,12 @@ export interface ComponentData {
 	type: ComponentType;
 }
 
+export interface Conversation {
+	id: string;
+	messages: Message[];
+	timestamp: Date;
+}
+
 export interface Message {
 	component?: ComponentData;
 	content: string;

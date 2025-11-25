@@ -5,7 +5,7 @@ interface ContactBadgeProps {
 	profilePicture: string;
 }
 
-export function ContactBadge({ company, email, name, profilePicture }: ContactBadgeProps) {
+export default function ContactBadge({ company, email, name, profilePicture }: ContactBadgeProps) {
 	return (
 		<div className='flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200 max-w-sm'>
 			<div className='relative'>
