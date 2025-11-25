@@ -17,6 +17,7 @@
       ║                                                             ║
       ╚═════════════════════════════════════════════════════════════╝
 ```
+
 # React.js Technical Test
 
 # Part 1: Real-time Chat Interface with Dynamic Components
@@ -28,34 +29,34 @@ You need to build a real-time chat interface that displays a conversation betwee
 ### Core Features
 
 1. **Message Streaming**
-   - Connect to a Server-Sent Events (SSE) stream that sends messages in real-time
-   - Messages are streamed 4 characters by 4 characters with `text_chunk` events
-   - Components are streamed field by field with `component_field` events
-   - Parse and display messages progressively as they build up
-   - Implement smooth animations and transitions for message appearance
-   - Handle the complete conversation flow from start to finish
+    - Connect to a Server-Sent Events (SSE) stream that sends messages in real-time
+    - Messages are streamed 4 characters by 4 characters with `text_chunk` events
+    - Components are streamed field by field with `component_field` events
+    - Parse and display messages progressively as they build up
+    - Implement smooth animations and transitions for message appearance
+    - Handle the complete conversation flow from start to finish
 
 2. **Message Types**
-   - **Text Messages**: Standard text content from both user and AI
-   - **Component Messages**: Rich content with embedded components
+    - **Text Messages**: Standard text content from both user and AI
+    - **Component Messages**: Rich content with embedded components
 
 3. **Dynamic Component System**
-   - **Contact Badge Component**: Display contact information with profile picture
-   - **Calendar Event Component**: Show meeting details with date, time, and status
-   - **Extensible Design**: Components should be easily extensible for future types
-   - **Clean UI**: Professional, responsive design that works on different screen sizes
+    - **Contact Badge Component**: Display contact information with profile picture
+    - **Calendar Event Component**: Show meeting details with date, time, and status
+    - **Extensible Design**: Components should be easily extensible for future types
+    - **Clean UI**: Professional, responsive design that works on different screen sizes
 
 ### Technical Implementation
 
-- Use React.js with TypeScript
-- **Implement SSE client** - connect to Server-Sent Events stream at `https://api-dev.withallo.com/v1/demo/interview/conversation`
-- **Character-level streaming** - handle `text_chunk` events to build messages progressively
-- **Component field streaming** - handle `component_field` events to build components progressively
-- **Message state management** - track message building state and component assembly
-- **Component system** - create reusable components for different message types
-- Ensure smooth performance during streaming
-- Handle edge cases (network failures, malformed JSON, incomplete messages, etc.)
-- **Error handling** - graceful handling of connection issues and parsing errors
+- Use React.js with TypeScript ✅
+- **Implement SSE client** - connect to Server-Sent Events stream at `https://api-dev.withallo.com/v1/demo/interview/conversation` ✅
+- **Character-level streaming** - handle `text_chunk` events to build messages progressively ✅
+- **Component field streaming** - handle `component_field` events to build components progressively ⏳
+- **Message state management** - track message building state and component assembly ⏳
+- **Component system** - create reusable components for different message types ⏳
+- Ensure smooth performance during streaming ⏳
+- Handle edge cases (network failures, malformed JSON, incomplete messages, etc.) ⏳
+- **Error handling** - graceful handling of connection issues and parsing errors ⏳
 
 ### Sample Data Structure
 
@@ -249,11 +250,13 @@ data:{"event":"message_end","messageId":"msg_2"}
 ### Event Types
 
 **Message Events**:
+
 - `message_start`: Begins a new message with role and messageId
 - `text_chunk`: Streams text content character by character with index
 - `message_end`: Completes a message
 
 **Component Events**:
+
 - `component_start`: Begins a component with componentType
 - `component_field`: Streams component fields one by one
 - `component_end`: Completes a component
@@ -261,10 +264,12 @@ data:{"event":"message_end","messageId":"msg_2"}
 ### Component Types
 
 **Contact Badge Component**:
+
 - `componentType`: "contact_badge"
 - Fields: `name`, `email`, `company`, `profilePicture`
 
 **Calendar Event Component**:
+
 - `componentType`: "calendar_event"
 - Fields: `title`, `date`, `time`, `status`
 
