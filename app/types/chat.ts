@@ -1,4 +1,9 @@
 /* ===== Constants & Enums ===== */
+export const COMPONENT_TYPES = {
+	CALENDAR_EVENT: 'calendar_event',
+	CONTACT_BADGE: 'contact_badge',
+} as const;
+
 export const ROLES = {
 	AGENT: 'agent',
 	USER: 'user',
@@ -14,13 +19,19 @@ export enum SSEEventType {
 }
 
 /* ===== Types & Interfaces ===== */
-export type ComponentType = 'calendar_event' | 'contact_badge';
+export type ComponentType = (typeof COMPONENT_TYPES)[keyof typeof COMPONENT_TYPES];
 
 export type Role = (typeof ROLES)[keyof typeof ROLES];
 
 export interface ComponentData {
 	data: Record<string, string>;
 	type: ComponentType;
+}
+
+export interface Conversation {
+	id: string;
+	messages: Message[];
+	timestamp: Date;
 }
 
 export interface Message {

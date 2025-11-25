@@ -1,0 +1,33 @@
+@theme {
+	--font-sans:
+		'ABCNormal Neutral', 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+		'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* ==== Brand palette ==== */
+:root {
+	--brand-primary-dark: #c5a030; /* darker shade for contrast */
+	--brand-primary-light: #ffe58a; /* lighter tint */
+	--brand-primary: #fdd150; /* company main color */
+}
+
+/* Message bubbles */
+.message-user {
+	background-color: var(--brand-primary);
+	border-radius: 0.5rem;
+	color: #000; /* black text for readability */
+	margin: 0.5rem 0;
+	max-width: 80%;
+	padding: 0.75rem;
+}
+
+.message-agent {
+	background-color: #f5f5f5; /* neutral light background */
+	border-radius: 0.5rem;
+	border: 1px solid #e0e0e0;
+	color: #000;
+	margin: 0.5rem 0;
+	max-width: 80%;
+	padding: 0.75rem;
+}
+
