@@ -18,16 +18,31 @@ function ChatError({ error }: { error: string | null }) {
 }
 
 /** Renders a connection status message. */
-function ConnectionStatus({ isConnected }: { isConnected: boolean }) {
+function ConnectionStatus({
+	isConnected,
+	isSlowConnection,
+}: {
+	isConnected: boolean;
+	isSlowConnection?: boolean;
+}) {
+	let statusColor = 'bg-red-500';
+	let statusText = 'Disconnected';
+
+	if (isConnected) {
+		if (isSlowConnection) {
+			statusColor = 'bg-orange-500';
+			statusText = 'Connected (Slow)';
+		} else {
+			statusColor = 'bg-green-500';
+			statusText = 'Connected';
+		}
+	}
+
 	return (
 		<div className='flex items-center gap-2'>
-			<span
-				className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
-			/>
+			<span className={`w-3 h-3 rounded-full ${statusColor}`} />
 
-			<span className='text-sm text-gray-500'>
-				{isConnected ? 'Connected' : 'Disconnected'}
-			</span>
+			<span className='text-sm text-gray-500'>{statusText}</span>
 		</div>
 	);
 }
@@ -43,7 +58,7 @@ function WaitingMessage({ conversations }: { conversations: Conversation[] }) {
 
 /** Main chat component. */
 export function Chat() {
-	const { conversations, error, isConnected } = useChatStream();
+	const { conversations, error, isConnected, isSlowConnection } = useChatStream();
 
 	return (
 		<div className='flex flex-col h-screen max-w-2xl mx-auto p-4'>
@@ -55,17 +70,28 @@ export function Chat() {
 						src={logo}
 					/>
 
-					<h1 className='text-3xl text-slate-800 tracking-tight'>AI Chat</h1>
+					<h1 className='text-3xl bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 animate-fadeIn hover:scale-105 transition-transform duration-300 tracking-tight'>
+						AI Chat
+					</h1>
 				</div>
 
 				<div className='flex flex-col items-end gap-1'>
-					<ConnectionStatus isConnected={isConnected} />
+					<ConnectionStatus
+						isConnected={isConnected}
+						isSlowConnection={isSlowConnection}
+					/>
 
 					<span className='text-xs text-gray-600 font-medium'>v0.0.3</span>
 				</div>
 			</header>
 
 			<ChatError error={error} />
+
+			{isSlowConnection && isConnected && (
+				<div className='bg-orange-100 border border-orange-400 text-orange-700 px-4 py-3 rounded mb-4'>
+					Connection is slow...
+				</div>
+			)}
 
 			<div className='flex-1 overflow-y-auto space-y-6 p-4 bg-gray-50 rounded-lg border border-gray-200'>
 				<WaitingMessage conversations={conversations} />
