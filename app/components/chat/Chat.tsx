@@ -1,51 +1,10 @@
 import logo from '../../assets/images/logo.avif';
 import { useChatStream } from '../../hooks/useChatStream';
+import ConnectionErrorAlert from './child-components/alerts/ConnectionErrorAlert';
+import SlowConnectionAlert from './child-components/alerts/SlowConnectionAlert';
 import ConversationView from './child-components/ConversationView';
 import MessageInput from './child-components/MessageInput';
 import type { Conversation } from '../../types/chat';
-
-/** Renders a chat error message. */
-function ChatError({ error }: { error: string | null }) {
-	if (!error) {
-		return null;
-	}
-
-	return (
-		<div className='bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4'>
-			{error}
-		</div>
-	);
-}
-
-/** Renders a connection status message. */
-function ConnectionStatus({
-	isConnected,
-	isSlowConnection,
-}: {
-	isConnected: boolean;
-	isSlowConnection?: boolean;
-}) {
-	let statusColor = 'bg-red-500';
-	let statusText = 'Disconnected';
-
-	if (isConnected) {
-		if (isSlowConnection) {
-			statusColor = 'bg-orange-500';
-			statusText = 'Connected (Slow)';
-		} else {
-			statusColor = 'bg-green-500';
-			statusText = 'Connected';
-		}
-	}
-
-	return (
-		<div className='flex items-center gap-2'>
-			<span className={`w-3 h-3 rounded-full ${statusColor}`} />
-
-			<span className='text-xs md:text-sm text-gray-500'>{statusText}</span>
-		</div>
-	);
-}
 
 /** Renders a waiting message when no conversations have arrived yet. */
 function WaitingMessage({ conversations }: { conversations: Conversation[] }) {
@@ -76,22 +35,13 @@ export function Chat() {
 				</div>
 
 				<div className='flex flex-col items-end gap-1'>
-					<ConnectionStatus
-						isConnected={isConnected}
-						isSlowConnection={isSlowConnection}
-					/>
-
 					<span className='text-xs text-gray-600 font-medium'>v0.0.3</span>
 				</div>
 			</header>
 
-			<ChatError error={error} />
+			<ConnectionErrorAlert error={error} />
 
-			{isSlowConnection && isConnected && (
-				<div className='bg-orange-100 border border-orange-400 text-orange-700 px-4 py-3 rounded mb-4'>
-					Connection is slow...
-				</div>
-			)}
+			<SlowConnectionAlert isConnected={isConnected} isSlowConnection={isSlowConnection} />
 
 			<div className='flex-1 overflow-y-auto space-y-4 md:space-y-6 p-2 md:p-4 bg-gray-50 rounded-lg border border-gray-200'>
 				<WaitingMessage conversations={conversations} />
