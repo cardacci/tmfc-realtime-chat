@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { COMPONENT_TYPES } from '../../../types/chat';
-import { isUserRole } from '../../../utils/chat';
+import { formatMessageTime, isUserRole } from '../../../utils/chat';
 import CalendarEvent from './CalendarEvent';
 import ContactBadge from './ContactBadge';
 import type { ComponentData, Conversation, Message, Role } from '../../../types/chat';
@@ -164,13 +164,6 @@ export default function ConversationView({
 		: undefined;
 
 	/* ===== Functions ===== */
-	const formatMessageTime = (date: Date) => {
-		return new Intl.DateTimeFormat('es-ES', {
-			hour: '2-digit',
-			minute: '2-digit',
-		}).format(date);
-	};
-
 	const getMessageClassName = (role: Role, isError: boolean | undefined) => {
 		if (isError) {
 			return 'message-error';

@@ -84,7 +84,8 @@ export function useChatStream() {
 
 		// Create a visible error message for the user.
 		const errorMessage: Message = {
-			content: `⚠️ Error: Received a malformed message (${eventType}). Some data could not be displayed.`,
+			content:
+				'⚠️ Oops! We received an incomplete message. Some information might be missing.',
 			id: `error_${Date.now()}_${Math.random()}`,
 			isComplete: true,
 			isError: true,
@@ -113,7 +114,8 @@ export function useChatStream() {
 
 				// Create error message for user.
 				const errorMessage: Message = {
-					content: `⚠️ Error: Received invalid data format. Expected an object but got ${typeof parsed}.`,
+					content:
+						'⚠️ Sorry, we received some unexpected data. Please try again in a moment.',
 					id: `error_${Date.now()}_${Math.random()}`,
 					isComplete: true,
 					isError: true,
@@ -137,7 +139,8 @@ export function useChatStream() {
 
 			// Create error message for user.
 			const errorMessage: Message = {
-				content: '⚠️ Error: Received malformed JSON data. The message could not be parsed.',
+				content:
+					'⚠️ We encountered a communication issue. Please refresh the page and try again.',
 				id: `error_${Date.now()}_${Math.random()}`,
 				isComplete: true,
 				isError: true,
@@ -233,7 +236,9 @@ export function useChatStream() {
 	useEffect(() => {
 		const handleOffline = () => {
 			setIsConnected(false);
-			setError('No internet connection. Reconnecting...');
+			setError(
+				"No internet connection. We'll reconnect automatically when you're back online."
+			);
 		};
 
 		const handleOnline = () => {
@@ -298,7 +303,7 @@ export function useChatStream() {
 			// Only set error if we are online (otherwise offline handler takes care of it)
 			if (window.navigator.onLine) {
 				setIsConnected(false);
-				setError('Connection lost. Reconnecting...');
+				setError("Connection temporarily lost. We're trying to reconnect...");
 			}
 			// EventSource automatically attempts to reconnect.
 		};
