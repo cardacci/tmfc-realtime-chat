@@ -284,146 +284,164 @@ export function useChatStream() {
 
 	// Mount - SSE Connection.
 	useEffect(() => {
-		const eventSource = new EventSource(STREAM_URL);
+		let timeoutId: ReturnType<typeof setTimeout>;
 
-		// Store the EventSource instance.
-		eventSourceRef.current = eventSource;
+		const connectToStream = () => {
+			const eventSource = new EventSource(STREAM_URL);
 
-		// Error handler.
-		eventSource.onerror = err => {
-			console.error('SSE Connection Error:', err);
+			// Store the EventSource instance.
+			eventSourceRef.current = eventSource;
 
-			// Check if this is an intentional close.
-			if (eventSource.readyState === EventSource.CLOSED) {
+			// Error handler.
+			eventSource.onerror = err => {
+				console.error('SSE Connection Error:', err);
+
+				// Check if this is an intentional close.
+				if (eventSource.readyState === EventSource.CLOSED) {
+					setIsConnected(false);
+
+					return;
+				}
+
+				// Only set error if we are online (otherwise offline handler takes care of it)
 				setIsConnected(false);
+				// We don't set an error here to avoid flashing "Connection lost" during
+				// standard reconnections (e.g., when the stream ends and restarts).
+				// The isConnected state will still disable the UI appropriately.
+				// setError("Connection temporarily lost. We're trying to reconnect...");
+				// EventSource automatically attempts to reconnect.
+			};
 
-				return;
-			}
+			// Open handler.
+			eventSource.onopen = () => {
+				setIsConnected(true);
+				setError(null);
+			};
 
-			// Only set error if we are online (otherwise offline handler takes care of it)
-			setIsConnected(false);
-			// We don't set an error here to avoid flashing "Connection lost" during
-			// standard reconnections (e.g., when the stream ends and restarts).
-			// The isConnected state will still disable the UI appropriately.
-			// setError("Connection temporarily lost. We're trying to reconnect...");
-			// EventSource automatically attempts to reconnect.
-		};
-
-		// Open handler.
-		eventSource.onopen = () => {
-			setIsConnected(true);
-			setError(null);
-		};
-
-		/* ===== Event Listeners. ===== */
-		// Component end.
-		eventSource.addEventListener(SSEEventType.COMPONENT_END, _e => {
-			/*
+			/* ===== Event Listeners. ===== */
+			// Component end.
+			eventSource.addEventListener(SSEEventType.COMPONENT_END, _e => {
+				/*
             Component is done, nothing specific to update on the message structure itself
             unless we want to mark the component as complete specifically.
             For now, message_end usually follows.
             */
-		});
-
-		// Component start.
-		eventSource.addEventListener(SSEEventType.COMPONENT_START, e => {
-			const additionalChecks = (data: any) => !!data.componentType;
-			const data = parseEventData(e, SSEEventType.COMPONENT_START);
-
-			// Validate data and required fields.
-			if (!validateEventData(data, SSEEventType.COMPONENT_START, additionalChecks)) {
-				return;
-			}
-
-			const { messageId } = data;
-
-			updateLastMessage(msg => {
-				if (msg.id !== messageId) {
-					return msg;
-				}
-
-				return {
-					...msg,
-					component: {
-						data: {},
-						type: data.componentType as ComponentType,
-					},
-				};
 			});
-		});
 
-		// Component field.
-		eventSource.addEventListener(SSEEventType.COMPONENT_FIELD, e => {
-			const additionalChecks = (data: any) => !!data.field && data.value !== undefined;
-			const data = parseEventData(e, SSEEventType.COMPONENT_FIELD);
+			// Component start.
+			eventSource.addEventListener(SSEEventType.COMPONENT_START, e => {
+				const additionalChecks = (data: any) => !!data.componentType;
+				const data = parseEventData(e, SSEEventType.COMPONENT_START);
 
-			// Validate data and required fields.
-			if (!validateEventData(data, SSEEventType.COMPONENT_FIELD, additionalChecks)) {
-				return;
-			}
-
-			const { messageId } = data;
-
-			updateLastMessage(msg => {
-				if (msg.id !== messageId || !msg.component) {
-					return msg;
+				// Validate data and required fields.
+				if (!validateEventData(data, SSEEventType.COMPONENT_START, additionalChecks)) {
+					return;
 				}
 
-				return {
-					...msg,
-					component: {
-						...msg.component,
-						data: {
-							...msg.component.data,
-							[data.field]: data.value,
+				const { messageId } = data;
+
+				updateLastMessage(msg => {
+					if (msg.id !== messageId) {
+						return msg;
+					}
+
+					return {
+						...msg,
+						component: {
+							data: {},
+							type: data.componentType as ComponentType,
 						},
-					},
-				};
+					};
+				});
 			});
-		});
 
-		// Message end.
-		eventSource.addEventListener(SSEEventType.MESSAGE_END, e => {
-			const data = parseEventData(e, SSEEventType.MESSAGE_END);
+			// Component field.
+			eventSource.addEventListener(SSEEventType.COMPONENT_FIELD, e => {
+				const additionalChecks = (data: any) => !!data.field && data.value !== undefined;
+				const data = parseEventData(e, SSEEventType.COMPONENT_FIELD);
 
-			// Validate data and required fields.
-			if (!validateEventData(data, SSEEventType.MESSAGE_END)) {
-				return;
-			}
-
-			const { messageId } = data;
-
-			updateLastMessage(msg => {
-				if (msg.id !== messageId) {
-					return msg;
+				// Validate data and required fields.
+				if (!validateEventData(data, SSEEventType.COMPONENT_FIELD, additionalChecks)) {
+					return;
 				}
 
-				return { ...msg, isComplete: true };
+				const { messageId } = data;
+
+				updateLastMessage(msg => {
+					if (msg.id !== messageId || !msg.component) {
+						return msg;
+					}
+
+					return {
+						...msg,
+						component: {
+							...msg.component,
+							data: {
+								...msg.component.data,
+								[data.field]: data.value,
+							},
+						},
+					};
+				});
 			});
-		});
 
-		// Message start.
-		eventSource.addEventListener(SSEEventType.MESSAGE_START, e => {
-			const additionalChecks = (data: any) => !!data.role;
-			const data = parseEventData(e, SSEEventType.MESSAGE_START);
+			// Message end.
+			eventSource.addEventListener(SSEEventType.MESSAGE_END, e => {
+				const data = parseEventData(e, SSEEventType.MESSAGE_END);
 
-			// Validate data and required fields
-			if (!validateEventData(data, SSEEventType.MESSAGE_START, additionalChecks)) {
-				return;
-			}
+				// Validate data and required fields.
+				if (!validateEventData(data, SSEEventType.MESSAGE_END)) {
+					return;
+				}
 
-			const { messageId, role } = data;
+				const { messageId } = data;
 
-			// Check if we've already received this message (new conversation detection)
-			if (receivedMessageIdsRef.current.has(messageId)) {
-				// Clear the received IDs to start fresh tracking for the new conversation.
-				receivedMessageIdsRef.current.clear();
+				updateLastMessage(msg => {
+					if (msg.id !== messageId) {
+						return msg;
+					}
+
+					return { ...msg, isComplete: true };
+				});
+			});
+
+			// Message start.
+			eventSource.addEventListener(SSEEventType.MESSAGE_START, e => {
+				const additionalChecks = (data: any) => !!data.role;
+				const data = parseEventData(e, SSEEventType.MESSAGE_START);
+
+				// Validate data and required fields
+				if (!validateEventData(data, SSEEventType.MESSAGE_START, additionalChecks)) {
+					return;
+				}
+
+				const { messageId, role } = data;
+
+				// Check if we've already received this message (new conversation detection)
+				if (receivedMessageIdsRef.current.has(messageId)) {
+					// Clear the received IDs to start fresh tracking for the new conversation.
+					receivedMessageIdsRef.current.clear();
+					receivedMessageIdsRef.current.add(messageId);
+
+					// Start a new conversation.
+					startNewConversation();
+
+					// Add the first message to the new conversation.
+					addMessage({
+						content: '',
+						id: messageId,
+						isComplete: false,
+						role,
+						timestamp: new Date(),
+					});
+
+					return;
+				}
+
+				// Mark this message ID as received.
 				receivedMessageIdsRef.current.add(messageId);
 
-				// Start a new conversation.
-				startNewConversation();
-
-				// Add the first message to the new conversation.
+				// Add message to current conversation.
 				addMessage({
 					content: '',
 					id: messageId,
@@ -431,47 +449,37 @@ export function useChatStream() {
 					role,
 					timestamp: new Date(),
 				});
-
-				return;
-			}
-
-			// Mark this message ID as received.
-			receivedMessageIdsRef.current.add(messageId);
-
-			// Add message to current conversation.
-			addMessage({
-				content: '',
-				id: messageId,
-				isComplete: false,
-				role,
-				timestamp: new Date(),
 			});
-		});
 
-		// Text chunk.
-		eventSource.addEventListener(SSEEventType.TEXT_CHUNK, e => {
-			const additionalChecks = (data: any) => data.chunk !== undefined;
-			const data = parseEventData(e, SSEEventType.TEXT_CHUNK);
+			// Text chunk.
+			eventSource.addEventListener(SSEEventType.TEXT_CHUNK, e => {
+				const additionalChecks = (data: any) => data.chunk !== undefined;
+				const data = parseEventData(e, SSEEventType.TEXT_CHUNK);
 
-			// Validate data and required fields
-			if (!validateEventData(data, SSEEventType.TEXT_CHUNK, additionalChecks)) {
-				return;
-			}
-
-			const { messageId } = data;
-
-			updateLastMessage(msg => {
-				if (msg.id !== messageId) {
-					return msg;
+				// Validate data and required fields
+				if (!validateEventData(data, SSEEventType.TEXT_CHUNK, additionalChecks)) {
+					return;
 				}
 
-				return { ...msg, content: msg.content + data.chunk };
+				const { messageId } = data;
+
+				updateLastMessage(msg => {
+					if (msg.id !== messageId) {
+						return msg;
+					}
+
+					return { ...msg, content: msg.content + data.chunk };
+				});
 			});
-		});
+		};
+
+		// Delay connection to allow empty state to be seen.
+		timeoutId = setTimeout(connectToStream, 2000);
 
 		return () => {
-			// Unmount - close connection properly.
-			closeConnection();
+			// Unmount
+			clearTimeout(timeoutId);
+			closeConnection(); // Close connection properly.
 		};
 	}, []);
 

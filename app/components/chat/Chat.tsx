@@ -6,18 +6,9 @@ import ConnectionErrorAlert from './child-components/alerts/ConnectionErrorAlert
 import Sidebar from './child-components/NavigationBar';
 import SlowConnectionAlert from './child-components/alerts/SlowConnectionAlert';
 import ConversationView from './child-components/ConversationView';
+import EmptyState from './child-components/EmptyState';
 import ErrorMessageDemo from './child-components/ErrorMessageDemo';
 import MessageInput from './child-components/MessageInput';
-import type { Conversation } from '../../types/chat';
-
-/** Renders a waiting message when no conversations have arrived yet. */
-function WaitingMessage({ conversations }: { conversations: Conversation[] }) {
-	if (conversations.length === 0) {
-		return <div className='text-center text-gray-400 mt-10'>Waiting for messages...</div>;
-	}
-
-	return null;
-}
 
 /** Main chat component. */
 export function Chat() {
@@ -26,6 +17,21 @@ export function Chat() {
 	/* ===== State ===== */
 	const [showErrorDemo, setShowErrorDemo] = useState(false);
 	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+	/* ===== Functions ===== */
+	const renderConversations = () => {
+		if (conversations.length === 0) {
+			return <EmptyState />;
+		}
+
+		return conversations.map((c, index) => (
+			<ConversationView
+				conversation={c}
+				key={c.id}
+				showTypingIndicator={index === conversations.length - 1}
+			/>
+		));
+	};
 
 	return (
 		<div className='flex flex-col h-screen max-w-2xl mx-auto p-2 md:p-4'>
@@ -80,15 +86,7 @@ export function Chat() {
 			<div className='flex-1 overflow-y-auto space-y-4 md:space-y-6 p-2 md:p-4 bg-gray-50 rounded-lg border border-gray-200'>
 				{showErrorDemo && <ErrorMessageDemo />}
 
-				<WaitingMessage conversations={conversations} />
-
-				{conversations.map((c, index) => (
-					<ConversationView
-						conversation={c}
-						key={c.id}
-						showTypingIndicator={index === conversations.length - 1}
-					/>
-				))}
+				{renderConversations()}
 			</div>
 
 			<MessageInput disabled={!isConnected} />

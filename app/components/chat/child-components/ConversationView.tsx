@@ -37,6 +37,7 @@ function ComponentMessage({ component }: { component: ComponentData | undefined 
 			);
 			break;
 		}
+		// Here we can add more component types.
 		default: {
 			// Fallback generic display.
 			componentResult = (
