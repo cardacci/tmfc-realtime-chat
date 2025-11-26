@@ -65,13 +65,13 @@ function TypingIndicator({ message }: { message: Message | undefined }) {
 	return (
 		<div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
 			<div
-				className={`max-w-[80%] rounded-lg p-3 ${
+				className={`max-w-[90%] md:max-w-[80%] rounded-lg p-2 md:p-3 ${
 					isUser
 						? 'bg-yellow-400 text-white opacity-80'
 						: 'bg-gray-100 border border-gray-300 text-gray-700 opacity-80'
 				}`}
 			>
-				<p className='whitespace-pre-wrap'>
+				<p className='text-sm md:text-base whitespace-pre-wrap break-words'>
 					{content}
 
 					<span className='inline-block w-2 h-4 bg-current ml-1 animate-pulse'>|</span>
@@ -132,7 +132,7 @@ export default function ConversationView({
 		<div className='mb-6 last:mb-0'>
 			<ConversationHeader conversation={conversation} />
 
-			<div className='space-y-4'>
+			<div className='space-y-3 md:space-y-4'>
 				{completeMessages.map(msg => {
 					const { content, component, id, role, timestamp } = msg;
 					const isUser = isUserRole(role);
@@ -143,7 +143,9 @@ export default function ConversationView({
 							className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} animate-fadeIn`}
 						>
 							<div className={isUser ? 'message-user' : 'message-agent'}>
-								<p className='whitespace-pre-wrap'>{content}</p>
+								<p className='text-sm md:text-base whitespace-pre-wrap'>
+									{content}
+								</p>
 
 								<ComponentMessage component={component} />
 
