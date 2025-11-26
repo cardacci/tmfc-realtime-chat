@@ -10,7 +10,7 @@ This project is a **real-time chat web application**.
 
 | Technology       | Version | Purpose                               |
 | ---------------- | ------- | ------------------------------------- |
-| **React Router** | 7.9.2   | Routing framework with SSR            |
+| **React Router** | 7.9.2   | Routing framework                     |
 | **React**        | 19.1.1  | UI library with functional components |
 | **Tailwind CSS** | 4.1.13  | CSS utility framework                 |
 | **TypeScript**   | 5.9.2   | Static typing and better DX           |
@@ -23,7 +23,9 @@ web-technical-test/
 │
 ├── app/                          # Application source code
 │   ├── components/               # Reusable React components
-│   │   └── ChatInterface.tsx     # Main chat component
+│   │   └── chat/                 # Chat specific components
+│   │       ├── Chat.tsx          # Main chat container
+│   │       └── child-components/ # Reusable UI components for the chat (alerts, inputs, views, etc.)
 │   │
 │   ├── routes/                   # Route definitions
 │   │   └── home.tsx              # Main route (/)
@@ -36,7 +38,8 @@ web-technical-test/
 │   ├── DEVELOPMENT_LOG.md       # Development progress log
 │   ├── INDEX.md                 # Documentation index
 │   ├── PROJECT_STRUCTURE.md     # Architecture documentation (this file)
-│   └── SETUP.md                 # Installation guide
+│   ├── SETUP.md                 # Installation guide
+│   └── product-strategy-and-design/ # Strategic analysis and design documents
 │
 ├── public/                       # Static files (served as-is)
 │   └── favicon.ico               # Application icon
@@ -141,17 +144,17 @@ TypeScript configuration with strict options and ES2022 modules.
 **Responsibilities:**
 
 - Defines SEO metadata (`meta` function)
-- Renders the `ChatInterface` component
+- Renders the `Chat` component
 
-#### `app/components/ChatInterface.tsx`
+#### `app/components/chat/Chat.tsx`
 
-**Purpose:** Main chat component (currently basic).
+**Purpose:** Main chat container component.
 
-**Current state:**
+**Responsibilities:**
 
-- Header with "AI Chat Assistant" title
-- Message area (placeholder)
-- Tailwind CSS styles
+- Manages the chat stream connection (SSE)
+- Handles message state and history
+- Renders the conversation view and input area
 
 #### `app/app.css`
 
