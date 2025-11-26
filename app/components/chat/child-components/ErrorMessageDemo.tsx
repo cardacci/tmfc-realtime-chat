@@ -1,12 +1,8 @@
-import { useState } from 'react';
 import { ROLES } from '../../../types/chat';
 import type { Message } from '../../../types/chat';
 
 /** Demo component to show error message examples */
 export default function ErrorMessageDemo() {
-	/* ===== State ===== */
-	const [showDemo, setShowDemo] = useState(false);
-
 	const demoErrorMessages: Message[] = [
 		{
 			content: '⚠️ Error: Received malformed JSON data. The message could not be parsed.',
@@ -35,32 +31,10 @@ export default function ErrorMessageDemo() {
 		},
 	];
 
-	if (!showDemo) {
-		return (
-			<div className='mb-4'>
-				<button
-					className='w-full px-4 py-2 bg-orange-100 hover:bg-orange-200 text-orange-800 rounded-lg border border-orange-300 transition-colors text-sm font-medium'
-					onClick={() => setShowDemo(true)}
-					type='button'
-				>
-					🔍 Show Error Message Examples
-				</button>
-			</div>
-		);
-	}
-
 	return (
 		<div className='mb-4 p-4 bg-orange-50 rounded-lg border border-orange-200'>
 			<div className='flex justify-between items-center mb-3'>
 				<h3 className='text-sm font-semibold text-orange-900'>📋 Error Message Demo</h3>
-
-				<button
-					className='text-xs text-orange-600 hover:text-orange-800 underline'
-					onClick={() => setShowDemo(false)}
-					type='button'
-				>
-					Hide
-				</button>
 			</div>
 
 			<p className='text-xs text-orange-700 mb-3'>

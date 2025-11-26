@@ -1,6 +1,9 @@
+import { useState } from 'react';
+
 import logo from '../../assets/images/logo.avif';
 import { useChatStream } from '../../hooks/useChatStream';
 import ConnectionErrorAlert from './child-components/alerts/ConnectionErrorAlert';
+import Sidebar from './child-components/NavigationBar';
 import SlowConnectionAlert from './child-components/alerts/SlowConnectionAlert';
 import ConversationView from './child-components/ConversationView';
 import ErrorMessageDemo from './child-components/ErrorMessageDemo';
@@ -20,6 +23,10 @@ function WaitingMessage({ conversations }: { conversations: Conversation[] }) {
 export function Chat() {
 	const { conversations, error, isConnected, isSlowConnection } = useChatStream();
 
+	/* ===== State ===== */
+	const [showErrorDemo, setShowErrorDemo] = useState(false);
+	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
 	return (
 		<div className='flex flex-col h-screen max-w-2xl mx-auto p-2 md:p-4'>
 			<header className='chat-header mb-2 md:mb-4 flex justify-between items-center p-2 md:p-4 rounded-lg shadow-sm'>
@@ -30,22 +37,48 @@ export function Chat() {
 						src={logo}
 					/>
 
-					<h1 className='text-xl md:text-3xl bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 animate-fadeIn hover:scale-105 transition-transform duration-300 tracking-tight'>
+					<h1 className='text-xl md:text-3xl bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 animate-fadeIn transition-transform duration-300 tracking-tight'>
 						AI Chat
 					</h1>
 				</div>
 
-				<div className='flex flex-col items-end gap-1'>
-					<span className='text-xs text-gray-600 font-medium'>v0.0.4</span>
+				<div className='flex items-center gap-3'>
+					<button
+						aria-label='Open menu'
+						className='p-2 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500'
+						onClick={() => setIsSidebarOpen(true)}
+						type='button'
+					>
+						<svg
+							className='w-6 h-6 text-gray-700'
+							fill='none'
+							stroke='currentColor'
+							viewBox='0 0 24 24'
+						>
+							<path
+								d='M4 6h16M4 12h16M4 18h16'
+								strokeLinecap='round'
+								strokeLinejoin='round'
+								strokeWidth={2}
+							/>
+						</svg>
+					</button>
 				</div>
 			</header>
+
+			<Sidebar
+				isOpen={isSidebarOpen}
+				onClose={() => setIsSidebarOpen(false)}
+				onToggleErrorDemo={() => setShowErrorDemo(prev => !prev)}
+				showErrorDemo={showErrorDemo}
+			/>
 
 			<ConnectionErrorAlert error={error} />
 
 			<SlowConnectionAlert isConnected={isConnected} isSlowConnection={isSlowConnection} />
 
 			<div className='flex-1 overflow-y-auto space-y-4 md:space-y-6 p-2 md:p-4 bg-gray-50 rounded-lg border border-gray-200'>
-				<ErrorMessageDemo />
+				{showErrorDemo && <ErrorMessageDemo />}
 
 				<WaitingMessage conversations={conversations} />
 
