@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { COMPONENT_TYPES } from '../../../types/chat';
-import { isUserRole } from '../../../utils/chat';
+import { formatMessageTime, isUserRole } from '../../../utils/chat';
 import CalendarEvent from './CalendarEvent';
 import ContactBadge from './ContactBadge';
-import type { ComponentData, Conversation, Message } from '../../../types/chat';
+import type { ComponentData, Conversation, Message, Role } from '../../../types/chat';
 
 /** Renders a component message based on its type. */
 function ComponentMessage({ component }: { component: ComponentData | undefined }) {
@@ -37,6 +37,7 @@ function ComponentMessage({ component }: { component: ComponentData | undefined 
 			);
 			break;
 		}
+		// Here we can add more component types.
 		default: {
 			// Fallback generic display.
 			componentResult = (
@@ -164,11 +165,16 @@ export default function ConversationView({
 		: undefined;
 
 	/* ===== Functions ===== */
-	const formatMessageTime = (date: Date) => {
-		return new Intl.DateTimeFormat('es-ES', {
-			hour: '2-digit',
-			minute: '2-digit',
-		}).format(date);
+	const getMessageClassName = (role: Role, isError: boolean | undefined) => {
+		if (isError) {
+			return 'message-error';
+		}
+
+		if (isUserRole(role)) {
+			return 'message-user';
+		}
+
+		return 'message-agent';
 	};
 
 	return (
@@ -177,7 +183,7 @@ export default function ConversationView({
 
 			<div className='space-y-3 md:space-y-4'>
 				{completeMessages.map(msg => {
-					const { content, component, id, role, timestamp } = msg;
+					const { content, component, id, isError, role, timestamp } = msg;
 					const isUser = isUserRole(role);
 
 					return (
@@ -185,7 +191,7 @@ export default function ConversationView({
 							key={id}
 							className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} animate-fadeIn`}
 						>
-							<div className={isUser ? 'message-user' : 'message-agent'}>
+							<div className={getMessageClassName(role, isError)}>
 								<p className='text-sm md:text-base whitespace-pre-wrap'>
 									{content}
 								</p>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { SSEEventType, WindowEventType } from '../types/chat';
+import { ROLES, SSEEventType, WindowEventType } from '../types/chat';
 import type { ComponentType, Conversation, Message } from '../types/chat';
 
 /* ===== Constants & Enums ===== */
@@ -35,6 +35,36 @@ export function useChatStream() {
 	const receivedMessageIdsRef = useRef<Set<string>>(new Set()); // Received message IDs.
 
 	/* ===== Functions ===== */
+	// Helper to add a new message to the current conversation.
+	const addMessage = (message: Message) => {
+		setConversations(prev => {
+			const currentIndex = currentConversationIndexRef.current;
+
+			// If no conversations exist, create the first one.
+			if (prev.length === 0) {
+				const newConversation: Conversation = {
+					id: `conversation_${Date.now()}`,
+					messages: [message],
+					timestamp: new Date(),
+				};
+
+				currentConversationIndexRef.current = 0; // Set index for the first conversation.
+
+				return [newConversation];
+			}
+
+			const updatedConversations = [...prev];
+			const currentConversation = updatedConversations[currentIndex];
+
+			updatedConversations[currentIndex] = {
+				...currentConversation,
+				messages: [...currentConversation.messages, message],
+			};
+
+			return updatedConversations;
+		});
+	};
+
 	// Helper to close the EventSource connection.
 	const closeConnection = () => {
 		if (eventSourceRef.current) {
@@ -44,9 +74,84 @@ export function useChatStream() {
 		}
 	};
 
-	// Helper to parse SSE event data.
-	const parseEventData = (e: { data: string }): any => {
-		return JSON.parse(e.data);
+	/**
+	 * Helper to execute incomplete message error and display it to the user.
+	 * @param data - The parsed event data to validate.
+	 * @param eventType - The SSE event type for error logging.
+	 */
+	const executeIncompleteMessageError = (data: any, eventType: string) => {
+		console.error(`[SSE ${eventType}] Incomplete message: missing required fields`, data);
+
+		// Create a visible error message for the user.
+		const errorMessage: Message = {
+			content:
+				'⚠️ Oops! We received an incomplete message. Some information might be missing.',
+			id: `error_${Date.now()}_${Math.random()}`,
+			isComplete: true,
+			isError: true,
+			role: ROLES.AGENT,
+			timestamp: new Date(),
+		};
+
+		addMessage(errorMessage);
+	};
+
+	/**
+	 * Helper to parse SSE event data.
+	 * @param e - The SSE event containing data to parse.
+	 * @param eventType - Optional event type for better error logging.
+	 * @returns Parsed data object or null if parsing fails.
+	 */
+	const parseEventData = (e: { data: string }, eventType?: string): any => {
+		try {
+			const parsed = JSON.parse(e.data);
+
+			// Validate that we got an object back
+			if (typeof parsed !== 'object' || parsed === null) {
+				console.error(
+					`[SSE ${eventType || 'Unknown'}] Invalid data format: expected object, got ${typeof parsed}`
+				);
+
+				// Create error message for user.
+				const errorMessage: Message = {
+					content:
+						'⚠️ Sorry, we received some unexpected data. Please try again in a moment.',
+					id: `error_${Date.now()}_${Math.random()}`,
+					isComplete: true,
+					isError: true,
+					role: ROLES.AGENT,
+					timestamp: new Date(),
+				};
+
+				addMessage(errorMessage);
+
+				return null;
+			}
+
+			return parsed;
+		} catch (error) {
+			console.error(
+				`[SSE ${eventType || 'Unknown'}] Malformed JSON:`,
+				error instanceof Error ? error.message : error,
+				'\nRaw data:',
+				e.data
+			);
+
+			// Create error message for user.
+			const errorMessage: Message = {
+				content:
+					'⚠️ We encountered a communication issue. Please refresh the page and try again.',
+				id: `error_${Date.now()}_${Math.random()}`,
+				isComplete: true,
+				isError: true,
+				role: ROLES.AGENT,
+				timestamp: new Date(),
+			};
+
+			addMessage(errorMessage);
+
+			return null;
+		}
 	};
 
 	// Helper to start a new conversation.
@@ -97,33 +202,33 @@ export function useChatStream() {
 		});
 	};
 
-	// Helper to add a new message to the current conversation.
-	const addMessage = (message: Message) => {
-		setConversations(prev => {
-			const currentIndex = currentConversationIndexRef.current;
+	/**
+	 * Validates SSE event data and required fields.
+	 * @param data - The parsed event data to validate.
+	 * @param eventType - The SSE event type for error logging.
+	 * @param additionalChecks - Optional function that performs additional validation checks.
+	 * @returns True if data is valid, false otherwise.
+	 */
+	const validateEventData = (
+		data: any,
+		eventType: string,
+		additionalChecks?: (data: any) => boolean
+	): boolean => {
+		// Check if data exists and has messageId. MessageId is required for all events.
+		if (!data || !data.messageId) {
+			executeIncompleteMessageError(data, eventType);
 
-			// If no conversations exist, create the first one
-			if (prev.length === 0) {
-				const newConversation: Conversation = {
-					id: `conversation_${Date.now()}`,
-					messages: [message],
-					timestamp: new Date(),
-				};
-				currentConversationIndexRef.current = 0; // Set index for the first conversation.
+			return false;
+		}
 
-				return [newConversation];
-			}
+		// Run additional validation checks if provided.
+		if (additionalChecks && !additionalChecks(data)) {
+			executeIncompleteMessageError(data, eventType);
 
-			const updatedConversations = [...prev];
-			const currentConversation = updatedConversations[currentIndex];
+			return false;
+		}
 
-			updatedConversations[currentIndex] = {
-				...currentConversation,
-				messages: [...currentConversation.messages, message],
-			};
-
-			return updatedConversations;
-		});
+		return true;
 	};
 
 	/* ===== Effects ===== */
@@ -131,7 +236,9 @@ export function useChatStream() {
 	useEffect(() => {
 		const handleOffline = () => {
 			setIsConnected(false);
-			setError('No internet connection. Reconnecting...');
+			setError(
+				"No internet connection. We'll reconnect automatically when you're back online."
+			);
 		};
 
 		const handleOnline = () => {
@@ -177,118 +284,164 @@ export function useChatStream() {
 
 	// Mount - SSE Connection.
 	useEffect(() => {
-		const eventSource = new EventSource(STREAM_URL);
+		let timeoutId: ReturnType<typeof setTimeout>;
 
-		// Store the EventSource instance.
-		eventSourceRef.current = eventSource;
+		const connectToStream = () => {
+			const eventSource = new EventSource(STREAM_URL);
 
-		// Error handler.
-		eventSource.onerror = err => {
-			console.error('SSE Connection Error:', err);
+			// Store the EventSource instance.
+			eventSourceRef.current = eventSource;
 
-			// Check if this is an intentional close.
-			if (eventSource.readyState === EventSource.CLOSED) {
+			// Error handler.
+			eventSource.onerror = err => {
+				console.error('SSE Connection Error:', err);
+
+				// Check if this is an intentional close.
+				if (eventSource.readyState === EventSource.CLOSED) {
+					setIsConnected(false);
+
+					return;
+				}
+
+				// Only set error if we are online (otherwise offline handler takes care of it)
 				setIsConnected(false);
+				// We don't set an error here to avoid flashing "Connection lost" during
+				// standard reconnections (e.g., when the stream ends and restarts).
+				// The isConnected state will still disable the UI appropriately.
+				// setError("Connection temporarily lost. We're trying to reconnect...");
+				// EventSource automatically attempts to reconnect.
+			};
 
-				return;
-			}
+			// Open handler.
+			eventSource.onopen = () => {
+				setIsConnected(true);
+				setError(null);
+			};
 
-			// Only set error if we are online (otherwise offline handler takes care of it)
-			if (window.navigator.onLine) {
-				setIsConnected(false);
-				setError('Connection lost. Reconnecting...');
-			}
-			// EventSource automatically attempts to reconnect.
-		};
-
-		// Open handler.
-		eventSource.onopen = () => {
-			setIsConnected(true);
-			setError(null);
-		};
-
-		/* ===== Event Listeners. ===== */
-		// Component end.
-		eventSource.addEventListener(SSEEventType.COMPONENT_END, _e => {
-			/*
+			/* ===== Event Listeners. ===== */
+			// Component end.
+			eventSource.addEventListener(SSEEventType.COMPONENT_END, _e => {
+				/*
             Component is done, nothing specific to update on the message structure itself
             unless we want to mark the component as complete specifically.
             For now, message_end usually follows.
             */
-		});
-
-		// Component start.
-		eventSource.addEventListener(SSEEventType.COMPONENT_START, e => {
-			const data = parseEventData(e);
-			const { messageId } = data;
-
-			updateLastMessage(msg => {
-				if (msg.id !== messageId) {
-					return msg;
-				}
-
-				return {
-					...msg,
-					component: {
-						data: {},
-						type: data.componentType as ComponentType,
-					},
-				};
 			});
-		});
 
-		// Component field.
-		eventSource.addEventListener(SSEEventType.COMPONENT_FIELD, e => {
-			const data = parseEventData(e);
-			const { messageId } = data;
+			// Component start.
+			eventSource.addEventListener(SSEEventType.COMPONENT_START, e => {
+				const additionalChecks = (data: any) => !!data.componentType;
+				const data = parseEventData(e, SSEEventType.COMPONENT_START);
 
-			updateLastMessage(msg => {
-				if (msg.id !== messageId || !msg.component) {
-					return msg;
+				// Validate data and required fields.
+				if (!validateEventData(data, SSEEventType.COMPONENT_START, additionalChecks)) {
+					return;
 				}
 
-				return {
-					...msg,
-					component: {
-						...msg.component,
-						data: {
-							...msg.component.data,
-							[data.field]: data.value,
+				const { messageId } = data;
+
+				updateLastMessage(msg => {
+					if (msg.id !== messageId) {
+						return msg;
+					}
+
+					return {
+						...msg,
+						component: {
+							data: {},
+							type: data.componentType as ComponentType,
 						},
-					},
-				};
+					};
+				});
 			});
-		});
 
-		// Message end.
-		eventSource.addEventListener(SSEEventType.MESSAGE_END, e => {
-			const data = parseEventData(e);
-			const { messageId } = data;
+			// Component field.
+			eventSource.addEventListener(SSEEventType.COMPONENT_FIELD, e => {
+				const additionalChecks = (data: any) => !!data.field && data.value !== undefined;
+				const data = parseEventData(e, SSEEventType.COMPONENT_FIELD);
 
-			updateLastMessage(msg => {
-				if (msg.id !== messageId) {
-					return msg;
+				// Validate data and required fields.
+				if (!validateEventData(data, SSEEventType.COMPONENT_FIELD, additionalChecks)) {
+					return;
 				}
 
-				return { ...msg, isComplete: true };
+				const { messageId } = data;
+
+				updateLastMessage(msg => {
+					if (msg.id !== messageId || !msg.component) {
+						return msg;
+					}
+
+					return {
+						...msg,
+						component: {
+							...msg.component,
+							data: {
+								...msg.component.data,
+								[data.field]: data.value,
+							},
+						},
+					};
+				});
 			});
-		});
 
-		// Message start.
-		eventSource.addEventListener(SSEEventType.MESSAGE_START, e => {
-			const data = parseEventData(e);
-			const { messageId, role } = data;
+			// Message end.
+			eventSource.addEventListener(SSEEventType.MESSAGE_END, e => {
+				const data = parseEventData(e, SSEEventType.MESSAGE_END);
 
-			// Check if we've already received this message (new conversation detection)
-			if (receivedMessageIdsRef.current.has(messageId)) {
-				// Clear the received IDs to start fresh tracking for the new conversation.
-				receivedMessageIdsRef.current.clear();
+				// Validate data and required fields.
+				if (!validateEventData(data, SSEEventType.MESSAGE_END)) {
+					return;
+				}
+
+				const { messageId } = data;
+
+				updateLastMessage(msg => {
+					if (msg.id !== messageId) {
+						return msg;
+					}
+
+					return { ...msg, isComplete: true };
+				});
+			});
+
+			// Message start.
+			eventSource.addEventListener(SSEEventType.MESSAGE_START, e => {
+				const additionalChecks = (data: any) => !!data.role;
+				const data = parseEventData(e, SSEEventType.MESSAGE_START);
+
+				// Validate data and required fields
+				if (!validateEventData(data, SSEEventType.MESSAGE_START, additionalChecks)) {
+					return;
+				}
+
+				const { messageId, role } = data;
+
+				// Check if we've already received this message (new conversation detection)
+				if (receivedMessageIdsRef.current.has(messageId)) {
+					// Clear the received IDs to start fresh tracking for the new conversation.
+					receivedMessageIdsRef.current.clear();
+					receivedMessageIdsRef.current.add(messageId);
+
+					// Start a new conversation.
+					startNewConversation();
+
+					// Add the first message to the new conversation.
+					addMessage({
+						content: '',
+						id: messageId,
+						isComplete: false,
+						role,
+						timestamp: new Date(),
+					});
+
+					return;
+				}
+
+				// Mark this message ID as received.
 				receivedMessageIdsRef.current.add(messageId);
 
-				// Start a new conversation.
-				startNewConversation();
-
-				// Add the first message to the new conversation.
+				// Add message to current conversation.
 				addMessage({
 					content: '',
 					id: messageId,
@@ -296,40 +449,37 @@ export function useChatStream() {
 					role,
 					timestamp: new Date(),
 				});
-
-				return;
-			}
-
-			// Mark this message ID as received.
-			receivedMessageIdsRef.current.add(messageId);
-
-			// Add message to current conversation.
-			addMessage({
-				content: '',
-				id: messageId,
-				isComplete: false,
-				role,
-				timestamp: new Date(),
 			});
-		});
 
-		// Text chunk.
-		eventSource.addEventListener(SSEEventType.TEXT_CHUNK, e => {
-			const data = parseEventData(e);
-			const { messageId } = data;
+			// Text chunk.
+			eventSource.addEventListener(SSEEventType.TEXT_CHUNK, e => {
+				const additionalChecks = (data: any) => data.chunk !== undefined;
+				const data = parseEventData(e, SSEEventType.TEXT_CHUNK);
 
-			updateLastMessage(msg => {
-				if (msg.id !== messageId) {
-					return msg;
+				// Validate data and required fields
+				if (!validateEventData(data, SSEEventType.TEXT_CHUNK, additionalChecks)) {
+					return;
 				}
 
-				return { ...msg, content: msg.content + data.chunk };
+				const { messageId } = data;
+
+				updateLastMessage(msg => {
+					if (msg.id !== messageId) {
+						return msg;
+					}
+
+					return { ...msg, content: msg.content + data.chunk };
+				});
 			});
-		});
+		};
+
+		// Delay connection to allow empty state to be seen.
+		timeoutId = setTimeout(connectToStream, 2000);
 
 		return () => {
-			// Unmount - close connection properly.
-			closeConnection();
+			// Unmount
+			clearTimeout(timeoutId);
+			closeConnection(); // Close connection properly.
 		};
 	}, []);
 
