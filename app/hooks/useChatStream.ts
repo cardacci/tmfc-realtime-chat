@@ -301,10 +301,11 @@ export function useChatStream() {
 			}
 
 			// Only set error if we are online (otherwise offline handler takes care of it)
-			if (window.navigator.onLine) {
-				setIsConnected(false);
-				setError("Connection temporarily lost. We're trying to reconnect...");
-			}
+			setIsConnected(false);
+			// We don't set an error here to avoid flashing "Connection lost" during
+			// standard reconnections (e.g., when the stream ends and restarts).
+			// The isConnected state will still disable the UI appropriately.
+			// setError("Connection temporarily lost. We're trying to reconnect...");
 			// EventSource automatically attempts to reconnect.
 		};
 

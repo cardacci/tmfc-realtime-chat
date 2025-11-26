@@ -4,6 +4,10 @@
 
 This version focuses on **robust error handling** and **code quality improvements**. The main achievement is implementing comprehensive validation for Server-Sent Events (SSE) data with user-visible error messages when malformed or incomplete data is received. This ensures the application continues to function gracefully even when encountering corrupted data streams.
 
+### UX Improvements
+
+- Suppressed "Connection temporarily lost" error during standard stream restarts to prevent UI flickering and confusion.
+
 ## <a id="version-0.0.3"></a>Version 0.0.3
 
 ### Mobile UX Enhancements
