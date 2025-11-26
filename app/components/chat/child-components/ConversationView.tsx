@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { COMPONENT_TYPES } from '../../../types/chat';
 import { isUserRole } from '../../../utils/chat';
 import CalendarEvent from './CalendarEvent';
@@ -54,28 +55,70 @@ function ComponentMessage({ component }: { component: ComponentData | undefined 
 
 /** Renders a typing indicator for the incomplete (streaming) message. */
 function TypingIndicator({ message }: { message: Message | undefined }) {
+	/* ===== State ===== */
+	const [showContent, setShowContent] = useState(false);
+
+	/* ===== Constants & Variables ===== */
+	const content = message?.content || '';
+	const component = message?.component;
+	const DOTS_DELAY = 1000;
+	const role = message?.role || 'agent';
+	const isUser = isUserRole(role);
+	const hasContent = content.length > 0;
+
+	/* ===== Effects ===== */
+	// Delay showing content by 500ms for agent messages only (to ensure typing dots are visible)
+	useEffect(() => {
+		// User messages: show immediately without delay.
+		if (isUser) {
+			setShowContent(true);
+
+			return;
+		}
+
+		// Agent messages: apply 500ms delay
+		if (hasContent && !showContent) {
+			const timer = setTimeout(() => {
+				setShowContent(true);
+			}, DOTS_DELAY);
+
+			return () => clearTimeout(timer);
+		}
+
+		// Reset when content is cleared (new message)
+		if (!hasContent) {
+			setShowContent(false);
+		}
+	}, [DOTS_DELAY, hasContent, isUser, showContent]);
+
+	// Early return after all hooks
 	if (!message) {
 		return null;
 	}
 
-	/* ===== Constants & Variables ===== */
-	const { content, component, role } = message;
-	const isUser = isUserRole(role);
-
 	return (
-		<div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
+		<div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} animate-fadeIn`}>
 			<div
 				className={`max-w-[90%] md:max-w-[80%] rounded-lg p-2 md:p-3 ${
 					isUser
-						? 'bg-yellow-400 text-white opacity-80'
-						: 'bg-gray-100 border border-gray-300 text-gray-700 opacity-80'
+						? 'bg-yellow-400 text-white'
+						: 'bg-gray-100 border border-gray-300 text-gray-700'
 				}`}
 			>
-				<p className='text-sm md:text-base whitespace-pre-wrap break-words'>
-					{content}
-
-					<span className='inline-block w-2 h-4 bg-current ml-1 animate-pulse'>|</span>
-				</p>
+				{showContent ? (
+					<p className='text-sm md:text-base whitespace-pre-wrap break-words animate-textFadeIn'>
+						{content}
+					</p>
+				) : (
+					// Only show typing dots for agent messages
+					!isUser && (
+						<div className='flex items-center gap-1 py-1'>
+							<span className='w-2 h-2 rounded-full bg-current typing-dot'></span>
+							<span className='w-2 h-2 rounded-full bg-current typing-dot'></span>
+							<span className='w-2 h-2 rounded-full bg-current typing-dot'></span>
+						</div>
+					)
+				)}
 
 				<ComponentMessage component={component} />
 			</div>

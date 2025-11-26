@@ -38,3 +38,49 @@
 	animation: shake 0.5s ease-in-out;
 }
 
+/* ===== Typing Indicator Animation ===== */
+@keyframes typingDots {
+	0%,
+	20% {
+		opacity: 0.3;
+		transform: translateY(0);
+	}
+	50% {
+		opacity: 1;
+		transform: translateY(-8px);
+	}
+	100% {
+		opacity: 0.3;
+		transform: translateY(0);
+	}
+}
+
+.typing-dot {
+	animation: typingDots 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) {
+	animation-delay: 0s;
+}
+
+.typing-dot:nth-child(2) {
+	animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+	animation-delay: 0.4s;
+}
+
+/* ===== Text Streaming Animation ===== */
+@keyframes textFadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+.animate-textFadeIn {
+	animation: textFadeIn 0.2s ease-out;
+}
