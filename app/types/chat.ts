@@ -44,6 +44,7 @@ export interface Message {
 	content: string;
 	id: string;
 	isComplete: boolean;
+	isError?: boolean; // Flag to indicate this is an error message.
 	role: Role;
 	timestamp: Date;
 }

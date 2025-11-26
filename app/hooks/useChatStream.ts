@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { SSEEventType, WindowEventType } from '../types/chat';
+import { ROLES, SSEEventType, WindowEventType } from '../types/chat';
 import type { ComponentType, Conversation, Message } from '../types/chat';
 
 /* ===== Constants & Enums ===== */
@@ -35,6 +35,36 @@ export function useChatStream() {
 	const receivedMessageIdsRef = useRef<Set<string>>(new Set()); // Received message IDs.
 
 	/* ===== Functions ===== */
+	// Helper to add a new message to the current conversation.
+	const addMessage = (message: Message) => {
+		setConversations(prev => {
+			const currentIndex = currentConversationIndexRef.current;
+
+			// If no conversations exist, create the first one.
+			if (prev.length === 0) {
+				const newConversation: Conversation = {
+					id: `conversation_${Date.now()}`,
+					messages: [message],
+					timestamp: new Date(),
+				};
+
+				currentConversationIndexRef.current = 0; // Set index for the first conversation.
+
+				return [newConversation];
+			}
+
+			const updatedConversations = [...prev];
+			const currentConversation = updatedConversations[currentIndex];
+
+			updatedConversations[currentIndex] = {
+				...currentConversation,
+				messages: [...currentConversation.messages, message],
+			};
+
+			return updatedConversations;
+		});
+	};
+
 	// Helper to close the EventSource connection.
 	const closeConnection = () => {
 		if (eventSourceRef.current) {
@@ -44,9 +74,81 @@ export function useChatStream() {
 		}
 	};
 
-	// Helper to parse SSE event data.
-	const parseEventData = (e: { data: string }): any => {
-		return JSON.parse(e.data);
+	/**
+	 * Helper to execute incomplete message error and display it to the user.
+	 * @param data - The parsed event data to validate.
+	 * @param eventType - The SSE event type for error logging.
+	 */
+	const executeIncompleteMessageError = (data: any, eventType: string) => {
+		console.error(`[SSE ${eventType}] Incomplete message: missing required fields`, data);
+
+		// Create a visible error message for the user.
+		const errorMessage: Message = {
+			content: `⚠️ Error: Received a malformed message (${eventType}). Some data could not be displayed.`,
+			id: `error_${Date.now()}_${Math.random()}`,
+			isComplete: true,
+			isError: true,
+			role: ROLES.AGENT,
+			timestamp: new Date(),
+		};
+
+		addMessage(errorMessage);
+	};
+
+	/**
+	 * Helper to parse SSE event data.
+	 * @param e - The SSE event containing data to parse.
+	 * @param eventType - Optional event type for better error logging.
+	 * @returns Parsed data object or null if parsing fails.
+	 */
+	const parseEventData = (e: { data: string }, eventType?: string): any => {
+		try {
+			const parsed = JSON.parse(e.data);
+
+			// Validate that we got an object back
+			if (typeof parsed !== 'object' || parsed === null) {
+				console.error(
+					`[SSE ${eventType || 'Unknown'}] Invalid data format: expected object, got ${typeof parsed}`
+				);
+
+				// Create error message for user.
+				const errorMessage: Message = {
+					content: `⚠️ Error: Received invalid data format. Expected an object but got ${typeof parsed}.`,
+					id: `error_${Date.now()}_${Math.random()}`,
+					isComplete: true,
+					isError: true,
+					role: ROLES.AGENT,
+					timestamp: new Date(),
+				};
+
+				addMessage(errorMessage);
+
+				return null;
+			}
+
+			return parsed;
+		} catch (error) {
+			console.error(
+				`[SSE ${eventType || 'Unknown'}] Malformed JSON:`,
+				error instanceof Error ? error.message : error,
+				'\nRaw data:',
+				e.data
+			);
+
+			// Create error message for user.
+			const errorMessage: Message = {
+				content: '⚠️ Error: Received malformed JSON data. The message could not be parsed.',
+				id: `error_${Date.now()}_${Math.random()}`,
+				isComplete: true,
+				isError: true,
+				role: ROLES.AGENT,
+				timestamp: new Date(),
+			};
+
+			addMessage(errorMessage);
+
+			return null;
+		}
 	};
 
 	// Helper to start a new conversation.
@@ -97,33 +199,33 @@ export function useChatStream() {
 		});
 	};
 
-	// Helper to add a new message to the current conversation.
-	const addMessage = (message: Message) => {
-		setConversations(prev => {
-			const currentIndex = currentConversationIndexRef.current;
+	/**
+	 * Validates SSE event data and required fields.
+	 * @param data - The parsed event data to validate.
+	 * @param eventType - The SSE event type for error logging.
+	 * @param additionalChecks - Optional function that performs additional validation checks.
+	 * @returns True if data is valid, false otherwise.
+	 */
+	const validateEventData = (
+		data: any,
+		eventType: string,
+		additionalChecks?: (data: any) => boolean
+	): boolean => {
+		// Check if data exists and has messageId. MessageId is required for all events.
+		if (!data || !data.messageId) {
+			executeIncompleteMessageError(data, eventType);
 
-			// If no conversations exist, create the first one
-			if (prev.length === 0) {
-				const newConversation: Conversation = {
-					id: `conversation_${Date.now()}`,
-					messages: [message],
-					timestamp: new Date(),
-				};
-				currentConversationIndexRef.current = 0; // Set index for the first conversation.
+			return false;
+		}
 
-				return [newConversation];
-			}
+		// Run additional validation checks if provided.
+		if (additionalChecks && !additionalChecks(data)) {
+			executeIncompleteMessageError(data, eventType);
 
-			const updatedConversations = [...prev];
-			const currentConversation = updatedConversations[currentIndex];
+			return false;
+		}
 
-			updatedConversations[currentIndex] = {
-				...currentConversation,
-				messages: [...currentConversation.messages, message],
-			};
-
-			return updatedConversations;
-		});
+		return true;
 	};
 
 	/* ===== Effects ===== */
@@ -219,7 +321,14 @@ export function useChatStream() {
 
 		// Component start.
 		eventSource.addEventListener(SSEEventType.COMPONENT_START, e => {
-			const data = parseEventData(e);
+			const additionalChecks = (data: any) => !!data.componentType;
+			const data = parseEventData(e, SSEEventType.COMPONENT_START);
+
+			// Validate data and required fields.
+			if (!validateEventData(data, SSEEventType.COMPONENT_START, additionalChecks)) {
+				return;
+			}
+
 			const { messageId } = data;
 
 			updateLastMessage(msg => {
@@ -239,7 +348,14 @@ export function useChatStream() {
 
 		// Component field.
 		eventSource.addEventListener(SSEEventType.COMPONENT_FIELD, e => {
-			const data = parseEventData(e);
+			const additionalChecks = (data: any) => !!data.field && data.value !== undefined;
+			const data = parseEventData(e, SSEEventType.COMPONENT_FIELD);
+
+			// Validate data and required fields.
+			if (!validateEventData(data, SSEEventType.COMPONENT_FIELD, additionalChecks)) {
+				return;
+			}
+
 			const { messageId } = data;
 
 			updateLastMessage(msg => {
@@ -262,7 +378,13 @@ export function useChatStream() {
 
 		// Message end.
 		eventSource.addEventListener(SSEEventType.MESSAGE_END, e => {
-			const data = parseEventData(e);
+			const data = parseEventData(e, SSEEventType.MESSAGE_END);
+
+			// Validate data and required fields.
+			if (!validateEventData(data, SSEEventType.MESSAGE_END)) {
+				return;
+			}
+
 			const { messageId } = data;
 
 			updateLastMessage(msg => {
@@ -276,7 +398,14 @@ export function useChatStream() {
 
 		// Message start.
 		eventSource.addEventListener(SSEEventType.MESSAGE_START, e => {
-			const data = parseEventData(e);
+			const additionalChecks = (data: any) => !!data.role;
+			const data = parseEventData(e, SSEEventType.MESSAGE_START);
+
+			// Validate data and required fields
+			if (!validateEventData(data, SSEEventType.MESSAGE_START, additionalChecks)) {
+				return;
+			}
+
 			const { messageId, role } = data;
 
 			// Check if we've already received this message (new conversation detection)
@@ -315,7 +444,14 @@ export function useChatStream() {
 
 		// Text chunk.
 		eventSource.addEventListener(SSEEventType.TEXT_CHUNK, e => {
-			const data = parseEventData(e);
+			const additionalChecks = (data: any) => data.chunk !== undefined;
+			const data = parseEventData(e, SSEEventType.TEXT_CHUNK);
+
+			// Validate data and required fields
+			if (!validateEventData(data, SSEEventType.TEXT_CHUNK, additionalChecks)) {
+				return;
+			}
+
 			const { messageId } = data;
 
 			updateLastMessage(msg => {

@@ -3,6 +3,7 @@ import { useChatStream } from '../../hooks/useChatStream';
 import ConnectionErrorAlert from './child-components/alerts/ConnectionErrorAlert';
 import SlowConnectionAlert from './child-components/alerts/SlowConnectionAlert';
 import ConversationView from './child-components/ConversationView';
+import ErrorMessageDemo from './child-components/ErrorMessageDemo';
 import MessageInput from './child-components/MessageInput';
 import type { Conversation } from '../../types/chat';
 
@@ -35,7 +36,7 @@ export function Chat() {
 				</div>
 
 				<div className='flex flex-col items-end gap-1'>
-					<span className='text-xs text-gray-600 font-medium'>v0.0.3</span>
+					<span className='text-xs text-gray-600 font-medium'>v0.0.4</span>
 				</div>
 			</header>
 
@@ -44,6 +45,8 @@ export function Chat() {
 			<SlowConnectionAlert isConnected={isConnected} isSlowConnection={isSlowConnection} />
 
 			<div className='flex-1 overflow-y-auto space-y-4 md:space-y-6 p-2 md:p-4 bg-gray-50 rounded-lg border border-gray-200'>
+				<ErrorMessageDemo />
+
 				<WaitingMessage conversations={conversations} />
 
 				{conversations.map((c, index) => (
