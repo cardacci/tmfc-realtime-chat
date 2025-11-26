@@ -18,6 +18,11 @@ export enum SSEEventType {
 	TEXT_CHUNK = 'text_chunk',
 }
 
+export enum WindowEventType {
+	OFFLINE = 'offline',
+	ONLINE = 'online',
+}
+
 /* ===== Types & Interfaces ===== */
 export type ComponentType = (typeof COMPONENT_TYPES)[keyof typeof COMPONENT_TYPES];
 
@@ -40,4 +45,5 @@ export interface Message {
 	id: string;
 	isComplete: boolean;
 	role: Role;
+	timestamp: Date;
 }

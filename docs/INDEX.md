@@ -28,10 +28,6 @@ Welcome to the complete documentation for the **The Mobile-First Company AI Chat
 
 If this is your first time with this project, follow these steps:
 
-### Read the Technical Test
-
-Start by reading **[README.md](../README.md)** to understand what you're expected to build.
-
 ### Install and Run
 
 Follow the **[SETUP.md](./SETUP.md)** guide to install dependencies and run the project:

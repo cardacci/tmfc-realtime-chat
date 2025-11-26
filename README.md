@@ -51,9 +51,9 @@ You need to build a real-time chat interface that displays a conversation betwee
 - Use React.js with TypeScript ✅
 - **Implement SSE client** - connect to Server-Sent Events stream at `https://api-dev.withallo.com/v1/demo/interview/conversation` ✅
 - **Character-level streaming** - handle `text_chunk` events to build messages progressively ✅
-- **Component field streaming** - handle `component_field` events to build components progressively ⏳
-- **Message state management** - track message building state and component assembly ⏳
-- **Component system** - create reusable components for different message types ⏳
+- **Component field streaming** - handle `component_field` events to build components progressively ✅
+- **Message state management** - track message building state and component assembly ✅
+- **Component system** - create reusable components for different message types ✅
 - Ensure smooth performance during streaming ⏳
 - Handle edge cases (network failures, malformed JSON, incomplete messages, etc.) ⏳
 - **Error handling** - graceful handling of connection issues and parsing errors ⏳

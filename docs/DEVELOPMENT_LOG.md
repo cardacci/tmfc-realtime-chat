@@ -1,5 +1,41 @@
 # Development Log
 
+## <a id="version-0.0.3"></a>Version 0.0.3
+
+### Mobile UX Enhancements
+
+- Optimized responsive design across all components (padding, spacing, text sizes)
+- Mobile-first approach with `md:` breakpoints for desktop
+- Touch-friendly button sizing and input fields
+- Improved text wrapping and truncation for small screens
+
+### UI Component Redesigns
+
+- **CalendarEvent**: Gradient backgrounds, animated overlays, modern status badges
+- **ContactBadge**: Avatar with gradient ring, online indicator, interactive email button
+- **Connection Alerts**: New dedicated components with gradients, icons, and animations
+
+### Animations
+
+- Added `typingDots` animation for modern typing indicator (3 bouncing dots)
+- Added `textFadeIn` for smooth streaming text appearance
+- Typing indicator shows only for agent messages with delay
+
+### Code Refactoring
+
+- Created `app/components/chat/child-components/alerts/` directory
+- Extracted `ConnectionErrorAlert` and `SlowConnectionAlert` components
+- Consistent prop-based conditional rendering pattern
+- Updated font stack to Inter/Poppins with Google Fonts
+- Refactored connection status logic with enums and helper functions
+
+### Bug Fixes
+
+- Fixed React Hooks violation in `TypingIndicator`
+- Fixed email truncation on mobile
+- Fixed z-index overlap with conversation date header
+- Removed unused `ConnectionStatus` component
+
 ## <a id="version-0.0.2"></a>Version 0.0.2
 
 ### Features

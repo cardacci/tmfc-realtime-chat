@@ -1,15 +1,33 @@
 import { useEffect, useRef, useState } from 'react';
-import { SSEEventType } from '../types/chat';
+import { SSEEventType, WindowEventType } from '../types/chat';
 import type { ComponentType, Conversation, Message } from '../types/chat';
 
 /* ===== Constants & Enums ===== */
+const CONNECTION_LISTENER_CHANGE_EVENT = 'change';
+const MAX_CONVERSATIONS = 5;
+const MAX_RTT_MS = 500; // Maximum Round-Trip Time in milliseconds.
 const STREAM_URL = 'https://api-dev.withallo.com/v1/demo/interview/conversation';
+
+enum SlowConnectionType {
+	SLOW_2G = 'slow-2g',
+	TWO_G = '2g',
+}
+
+/**
+ * Checks if the given effective connection type is considered slow.
+ * @param effectiveType - The effective connection type from the Network Information API.
+ * @returns True if the connection type is slow, false otherwise.
+ */
+function isSlowConnectionType(effectiveType: string): boolean {
+	return Object.values(SlowConnectionType).includes(effectiveType as SlowConnectionType);
+}
 
 export function useChatStream() {
 	/* ===== State ===== */
 	const [conversations, setConversations] = useState<Conversation[]>([]); // List of conversations.
 	const [error, setError] = useState<string | null>(null); // Error state.
 	const [isConnected, setIsConnected] = useState<boolean>(false); // Connection state.
+	const [isSlowConnection, setIsSlowConnection] = useState<boolean>(false); // Slow connection state.
 
 	/* ===== Refs ===== */
 	const currentConversationIndexRef = useRef<number>(0); // Current conversation index.
@@ -40,11 +58,18 @@ export function useChatStream() {
 		};
 
 		setConversations(prev => {
-			const newIndex = prev.length;
+			let updatedConversations = [...prev, newConversation];
+
+			// Keep only the last N conversations (performance).
+			if (updatedConversations.length > MAX_CONVERSATIONS) {
+				updatedConversations = updatedConversations.slice(1);
+			}
+
+			const newIndex = updatedConversations.length - 1;
 
 			currentConversationIndexRef.current = newIndex;
 
-			return [...prev, newConversation];
+			return updatedConversations;
 		});
 	};
 
@@ -102,6 +127,55 @@ export function useChatStream() {
 	};
 
 	/* ===== Effects ===== */
+	// Mount - Online/Offline detection.
+	useEffect(() => {
+		const handleOffline = () => {
+			setIsConnected(false);
+			setError('No internet connection. Reconnecting...');
+		};
+
+		const handleOnline = () => {
+			setIsConnected(true);
+			setError(null);
+		};
+
+		const connection = (window.navigator as any).connection;
+		const updateConnectionStatus = () => {
+			if (connection) {
+				const isSlow =
+					isSlowConnectionType(connection.effectiveType) || connection.rtt > MAX_RTT_MS;
+				setIsSlowConnection(isSlow);
+			}
+		};
+
+		window.addEventListener(WindowEventType.ONLINE, handleOnline);
+		window.addEventListener(WindowEventType.OFFLINE, handleOffline);
+
+		if (connection) {
+			connection.addEventListener(CONNECTION_LISTENER_CHANGE_EVENT, updateConnectionStatus);
+			updateConnectionStatus(); // Initial check
+		}
+
+		// Initial check
+		if (!window.navigator.onLine) {
+			handleOffline();
+		}
+
+		return () => {
+			// Unmount - Remove event listeners.
+			window.removeEventListener(WindowEventType.ONLINE, handleOnline);
+			window.removeEventListener(WindowEventType.OFFLINE, handleOffline);
+
+			if (connection) {
+				connection.removeEventListener(
+					CONNECTION_LISTENER_CHANGE_EVENT,
+					updateConnectionStatus
+				);
+			}
+		};
+	}, []);
+
+	// Mount - SSE Connection.
 	useEffect(() => {
 		const eventSource = new EventSource(STREAM_URL);
 
@@ -119,8 +193,11 @@ export function useChatStream() {
 				return;
 			}
 
-			setIsConnected(false);
-			setError('Connection lost. Reconnecting...');
+			// Only set error if we are online (otherwise offline handler takes care of it)
+			if (window.navigator.onLine) {
+				setIsConnected(false);
+				setError('Connection lost. Reconnecting...');
+			}
 			// EventSource automatically attempts to reconnect.
 		};
 
@@ -217,6 +294,7 @@ export function useChatStream() {
 					id: messageId,
 					isComplete: false,
 					role,
+					timestamp: new Date(),
 				});
 
 				return;
@@ -231,6 +309,7 @@ export function useChatStream() {
 				id: messageId,
 				isComplete: false,
 				role,
+				timestamp: new Date(),
 			});
 		});
 
@@ -258,5 +337,6 @@ export function useChatStream() {
 		conversations,
 		error,
 		isConnected,
+		isSlowConnection,
 	};
 }
