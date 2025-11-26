@@ -17,8 +17,7 @@ export default function EmptyState() {
 			<h3 className='text-xl md:text-2xl font-bold text-gray-800 mb-2'>It's quiet here...</h3>
 
 			<p className='text-gray-500 max-w-xs md:max-w-md mx-auto leading-relaxed'>
-				We are waiting for the conversation to start. Messages will appear here as soon as
-				they arrive.
+				Messages will appear here when available.
 			</p>
 		</div>
 	);

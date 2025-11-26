@@ -7,6 +7,8 @@ This version focuses on **robust error handling** and **code quality improvement
 ### UX Improvements
 
 - Suppressed "Connection temporarily lost" error during standard stream restarts to prevent UI flickering and confusion.
+- Added empty state in the chat for a better initial user experience.
+- Implemented specific error messages for malformed or corrupt SSE data.
 
 ## <a id="version-0.0.3"></a>Version 0.0.3
 

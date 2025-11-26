@@ -6,8 +6,9 @@ import {
 	Scripts,
 	ScrollRestoration,
 } from 'react-router';
+import { PremiumProvider } from './contexts/PremiumContext';
+import { usePremium } from './hooks/usePremium';
 import type { ReactNode } from 'react';
-
 import type { Route } from './+types/root';
 import './app.css';
 
@@ -24,6 +25,26 @@ export const links: Route.LinksFunction = () => [
 	},
 ];
 
+function BodyContent({ children }: { children: ReactNode }) {
+	const { isPremiumMode } = usePremium();
+
+	return (
+		<body
+			className={`transition-all duration-700 ${
+				isPremiumMode
+					? 'bg-gradient-to-br from-purple-100 via-pink-50 to-indigo-100'
+					: 'bg-white'
+			}`}
+		>
+			{children}
+
+			<ScrollRestoration />
+
+			<Scripts />
+		</body>
+	);
+}
+
 export function Layout({ children }: { children: ReactNode }) {
 	return (
 		<html lang='en'>
@@ -37,13 +58,9 @@ export function Layout({ children }: { children: ReactNode }) {
 				<Links />
 			</head>
 
-			<body>
-				{children}
-
-				<ScrollRestoration />
-
-				<Scripts />
-			</body>
+			<PremiumProvider>
+				<BodyContent>{children}</BodyContent>
+			</PremiumProvider>
 		</html>
 	);
 }
